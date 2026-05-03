@@ -1,0 +1,22 @@
+[package]
+name = "collage-maker"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "collage_maker"
+path = "src/lib.rs"
+
+[[bin]]
+name = "collage"
+path = "src/main.rs"
+
+[dependencies]
+anyhow   = "1"
+clap     = { version = "4", features = ["derive"] }
+image    = { version = "0.25", features = ["jpeg", "png", "bmp", "gif", "tiff", "webp"] }
+printpdf = { version = "0.7", features = ["embedded_images"] }
+walkdir  = "2"
+
+[dev-dependencies]
+image = { version = "0.25", features = ["jpeg", "png"] }
