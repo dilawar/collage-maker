@@ -37,7 +37,7 @@ fn open_with_viewer(path: &std::path::Path) {
     };
 
     match std::process::Command::new(viewer).arg(path).spawn() {
-        Ok(_)  => eprintln!("Opened in system viewer."),
+        Ok(_) => eprintln!("Opened in system viewer."),
         Err(e) => eprintln!("Could not open viewer ({viewer}): {e}"),
     }
 }

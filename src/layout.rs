@@ -67,9 +67,9 @@ fn best_partition(metas: &[Meta], cw: f64, ch: f64, g: f64) -> Vec<Vec<usize>> {
 fn score(rows: &[Vec<usize>], metas: &[Meta], cw: f64, ch: f64, g: f64) -> f64 {
     let th = total_height(rows, metas, cw, g);
     if th <= ch {
-        ch - th          // wasted vertical space
+        ch - th // wasted vertical space
     } else {
-        (th - ch) * 2.0  // overflow penalty
+        (th - ch) * 2.0 // overflow penalty
     }
 }
 
@@ -201,14 +201,7 @@ fn vertical_offset(total_h: f64, canvas_h: f64, scale: f64) -> f64 {
 }
 
 /// Emit placements for one row, left-to-right.
-fn place_row(
-    row: &[usize],
-    metas: &[Meta],
-    row_h: f64,
-    g: f64,
-    y: f64,
-    out: &mut Vec<Placement>,
-) {
+fn place_row(row: &[usize], metas: &[Meta], row_h: f64, g: f64, y: f64, out: &mut Vec<Placement>) {
     let mut x = 0.0f64;
     for &idx in row {
         let iw = metas[idx].aspect * row_h;

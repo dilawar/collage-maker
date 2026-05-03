@@ -1,7 +1,16 @@
 [package]
-name = "collage-maker"
-version = "0.1.0"
-edition = "2024"
+name        = "collage-maker"
+version     = "0.1.0"
+edition     = "2024"
+description = "CLI tool that arranges images into a collage. Outputs JPG, PNG, or PDF. A4 by default."
+license     = "MIT"
+repository  = "https://github.com/dilawar/collage-maker"
+homepage    = "https://github.com/dilawar/collage-maker"
+readme      = "README.md"
+keywords    = ["collage", "image", "photo", "pdf", "layout"]
+categories  = ["command-line-utilities", "multimedia::images"]
+authors     = ["Dilawar Singh <dilawar@dognosis.tech>"]
+exclude     = ["tests/images/*", ".github/*"]
 
 [lib]
 name = "collage_maker"
@@ -11,13 +20,27 @@ path = "src/lib.rs"
 name = "collage"
 path = "src/main.rs"
 
+# cargo-binstall: tell it the archive layout so it can find the binary.
+# Archives are named  collage-v{version}-{target}.tar.gz  (or .zip on Windows)
+# and the binary sits at the archive root.
+[package.metadata.binstall]
+pkg-url  = "{ repo }/releases/download/v{ version }/collage-v{ version }-{ target }.{ archive-format }"
+bin-dir  = "{ bin }{ binary-ext }"
+pkg-fmt  = "tgz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-fmt = "zip"
+
+[package.metadata.binstall.overrides.aarch64-pc-windows-msvc]
+pkg-fmt = "zip"
+
 [dependencies]
-anyhow   = "1"
-clap     = { version = "4", features = ["derive"] }
-image    = { version = "0.25", features = ["jpeg", "png", "bmp", "gif", "tiff", "webp"] }
-indicatif = "0.18.4"
-printpdf = { version = "0.7", features = ["embedded_images"] }
-walkdir  = "2"
+anyhow    = "1"
+clap      = { version = "4", features = ["derive"] }
+image     = { version = "0.25", features = ["jpeg", "png", "bmp", "gif", "tiff", "webp"] }
+indicatif = "0.18"
+printpdf  = { version = "0.7", features = ["embedded_images"] }
+walkdir   = "2"
 
 [dev-dependencies]
 image = { version = "0.25", features = ["jpeg", "png"] }

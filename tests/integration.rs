@@ -5,10 +5,7 @@ fn test_images_dir() -> PathBuf {
 }
 
 fn image_paths(names: &[&str]) -> Vec<PathBuf> {
-    names
-        .iter()
-        .map(|n| test_images_dir().join(n))
-        .collect()
+    names.iter().map(|n| test_images_dir().join(n)).collect()
 }
 
 fn all_test_images() -> Vec<PathBuf> {
@@ -31,7 +28,12 @@ mod collect_tests {
     fn gather_directory_finds_all_images() {
         let dir = test_images_dir();
         let paths = collect::gather(&[dir]).unwrap();
-        assert_eq!(paths.len(), 8, "expected 8 test images, got {}", paths.len());
+        assert_eq!(
+            paths.len(),
+            8,
+            "expected 8 test images, got {}",
+            paths.len()
+        );
     }
 
     #[test]
@@ -63,16 +65,37 @@ mod collect_tests {
         assert_eq!(metas.len(), 3);
 
         // landscape_a.jpg is 800×600 → aspect ≈ 1.333
-        let land = metas.iter().find(|m| m.path.ends_with("landscape_a.jpg")).unwrap();
-        assert!((land.aspect - 800.0 / 600.0).abs() < 0.01, "unexpected aspect {}", land.aspect);
+        let land = metas
+            .iter()
+            .find(|m| m.path.ends_with("landscape_a.jpg"))
+            .unwrap();
+        assert!(
+            (land.aspect - 800.0 / 600.0).abs() < 0.01,
+            "unexpected aspect {}",
+            land.aspect
+        );
 
         // portrait_a.jpg is 600×900 → aspect ≈ 0.667
-        let port = metas.iter().find(|m| m.path.ends_with("portrait_a.jpg")).unwrap();
-        assert!((port.aspect - 600.0 / 900.0).abs() < 0.01, "unexpected aspect {}", port.aspect);
+        let port = metas
+            .iter()
+            .find(|m| m.path.ends_with("portrait_a.jpg"))
+            .unwrap();
+        assert!(
+            (port.aspect - 600.0 / 900.0).abs() < 0.01,
+            "unexpected aspect {}",
+            port.aspect
+        );
 
         // square_a.jpg is 600×600 → aspect = 1.0
-        let sq = metas.iter().find(|m| m.path.ends_with("square_a.jpg")).unwrap();
-        assert!((sq.aspect - 1.0).abs() < 0.01, "unexpected aspect {}", sq.aspect);
+        let sq = metas
+            .iter()
+            .find(|m| m.path.ends_with("square_a.jpg"))
+            .unwrap();
+        assert!(
+            (sq.aspect - 1.0).abs() < 0.01,
+            "unexpected aspect {}",
+            sq.aspect
+        );
     }
 
     #[test]
@@ -114,11 +137,17 @@ mod layout_tests {
         for p in &placements {
             assert!(
                 p.x + p.w <= cw + 2,
-                "image overflows canvas right: x={} w={} cw={}", p.x, p.w, cw
+                "image overflows canvas right: x={} w={} cw={}",
+                p.x,
+                p.w,
+                cw
             );
             assert!(
                 p.y + p.h <= ch + 2,
-                "image overflows canvas bottom: y={} h={} ch={}", p.y, p.h, ch
+                "image overflows canvas bottom: y={} h={} ch={}",
+                p.y,
+                p.h,
+                ch
             );
         }
     }
@@ -135,18 +164,28 @@ mod layout_tests {
     #[test]
     fn no_image_is_trimmed() {
         // Aspect ratio must be preserved (w/h ≈ original aspect, within rounding)
-        let names = &["landscape_a.jpg", "portrait_a.jpg", "square_a.jpg", "wide.jpg", "tall.jpg"];
+        let names = &[
+            "landscape_a.jpg",
+            "portrait_a.jpg",
+            "square_a.jpg",
+            "wide.jpg",
+            "tall.jpg",
+        ];
         let metas = metas_for(names);
         let placements = layout::compute(&metas, 1240, 1754, 0);
 
         for (meta, p) in metas.iter().zip(placements.iter()) {
-            if p.h == 0 { continue; }
+            if p.h == 0 {
+                continue;
+            }
             let placed_aspect = p.w as f64 / p.h as f64;
             let diff = (placed_aspect - meta.aspect).abs() / meta.aspect;
             assert!(
                 diff < 0.02,
                 "aspect mismatch for {:?}: original={:.3} placed={:.3}",
-                meta.path.file_name().unwrap(), meta.aspect, placed_aspect
+                meta.path.file_name().unwrap(),
+                meta.aspect,
+                placed_aspect
             );
         }
     }
@@ -161,7 +200,7 @@ mod layout_tests {
     fn layout_uses_gap() {
         let metas = metas_for(&["landscape_a.jpg", "landscape_b.jpg"]);
         let with_gap = layout::compute(&metas, 1240, 1754, 20);
-        let no_gap   = layout::compute(&metas, 1240, 1754, 0);
+        let no_gap = layout::compute(&metas, 1240, 1754, 0);
 
         // When images end up in the same row the gap shifts the second image right
         if with_gap.len() == 2 && with_gap[0].y == with_gap[1].y {
@@ -212,7 +251,10 @@ mod render_tests {
             .pixels()
             .filter(|p| p[0] != 255 || p[1] != 255 || p[2] != 255)
             .count();
-        assert!(non_white > 1000, "canvas appears blank — image not rendered");
+        assert!(
+            non_white > 1000,
+            "canvas appears blank — image not rendered"
+        );
     }
 
     #[test]
@@ -272,7 +314,7 @@ mod output_tests {
 
     #[test]
     fn unknown_extension_falls_back_to_jpeg() {
-        let tmp = tempfile("/tmp/collage_test_out.bmp");  // unsupported → JPEG
+        let tmp = tempfile("/tmp/collage_test_out.bmp"); // unsupported → JPEG
         output::save(make_collage(400, 300), &tmp, 150.0).unwrap();
         let hdr = read_header(&tmp, 3);
         assert_eq!(&hdr, &[0xFF, 0xD8, 0xFF], "fallback should produce JPEG");

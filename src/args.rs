@@ -5,7 +5,10 @@ const A4_W_MM: f64 = 210.0;
 const A4_H_MM: f64 = 297.0;
 
 #[derive(Parser, Debug)]
-#[command(name = "collage", about = "Arrange images into a collage (A4 by default)")]
+#[command(
+    name = "collage",
+    about = "Arrange images into a collage (A4 by default)"
+)]
 pub struct Args {
     /// Input image files or directories (searched recursively)
     #[arg(required = true)]

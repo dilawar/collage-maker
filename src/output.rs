@@ -1,9 +1,6 @@
 use anyhow::{Context, Result};
 use image::{DynamicImage, RgbImage, codecs::jpeg::JpegEncoder};
-use std::{
-    io::BufWriter,
-    path::Path,
-};
+use std::{io::BufWriter, path::Path};
 
 /// Save `img` to `path`; format is inferred from the file extension.
 /// Supported extensions: jpg/jpeg → JPEG 90%, png → PNG, pdf → PDF.
@@ -12,20 +9,17 @@ pub fn save(img: RgbImage, path: &Path, dpi: f64) -> Result<()> {
     match extension(path) {
         "pdf" => save_pdf(img, path, dpi),
         "png" => save_png(img, path),
-        _     => save_jpeg(img, path),
+        _ => save_jpeg(img, path),
     }
 }
 
 fn extension(path: &Path) -> &str {
-    path.extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("jpg")
+    path.extension().and_then(|e| e.to_str()).unwrap_or("jpg")
 }
 
 fn save_jpeg(img: RgbImage, path: &Path) -> Result<()> {
-    let mut w = BufWriter::new(
-        std::fs::File::create(path).with_context(|| format!("create {:?}", path))?,
-    );
+    let mut w =
+        BufWriter::new(std::fs::File::create(path).with_context(|| format!("create {:?}", path))?);
     let enc = JpegEncoder::new_with_quality(&mut w, 90);
     DynamicImage::ImageRgb8(img)
         .write_with_encoder(enc)
@@ -33,7 +27,8 @@ fn save_jpeg(img: RgbImage, path: &Path) -> Result<()> {
 }
 
 fn save_png(img: RgbImage, path: &Path) -> Result<()> {
-    img.save(path).with_context(|| format!("save PNG {:?}", path))
+    img.save(path)
+        .with_context(|| format!("save PNG {:?}", path))
 }
 
 fn save_pdf(img: RgbImage, path: &Path, dpi: f64) -> Result<()> {
@@ -55,13 +50,15 @@ fn save_pdf(img: RgbImage, path: &Path, dpi: f64) -> Result<()> {
     let pdf_dyn = printpdf::image_crate::DynamicImage::ImageRgb8(pdf_rgb);
 
     let pdf_img = Image::from_dynamic_image(&pdf_dyn);
-    pdf_img.add_to_layer(layer, ImageTransform {
-        dpi: Some(dpi as f32),
-        ..Default::default()
-    });
-
-    let mut file = BufWriter::new(
-        std::fs::File::create(path).with_context(|| format!("create {:?}", path))?,
+    pdf_img.add_to_layer(
+        layer,
+        ImageTransform {
+            dpi: Some(dpi as f32),
+            ..Default::default()
+        },
     );
+
+    let mut file =
+        BufWriter::new(std::fs::File::create(path).with_context(|| format!("create {:?}", path))?);
     doc.save(&mut file).context("write PDF")
 }

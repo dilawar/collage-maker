@@ -9,7 +9,13 @@ pub fn draw(placements: &[Placement], canvas_w: u32, canvas_h: u32) -> Result<Rg
     let mut canvas = white_canvas(canvas_w, canvas_h);
     let pb = render_bar(placements.len());
     for p in placements {
-        pb.set_message(p.path.file_name().unwrap_or_default().to_string_lossy().into_owned());
+        pb.set_message(
+            p.path
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .into_owned(),
+        );
         paste(&mut canvas, p)?;
         pb.inc(1);
     }
@@ -25,8 +31,7 @@ fn paste(canvas: &mut RgbImage, p: &Placement) -> Result<()> {
     if p.w == 0 || p.h == 0 {
         return Ok(());
     }
-    let src = load_raw(&p.path)
-        .with_context(|| format!("load {:?}", p.path))?;
+    let src = load_raw(&p.path).with_context(|| format!("load {:?}", p.path))?;
     let scaled = imageops::resize(&src, p.w, p.h, imageops::FilterType::Lanczos3);
     imageops::replace(canvas, &scaled, p.x as i64, p.y as i64);
     Ok(())
