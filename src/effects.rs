@@ -1,22 +1,17 @@
 use image::{Rgba, RgbaImage};
-use rand::{Rng, RngExt};
 
 /// Parameters forwarded from CLI to the rendering step.
 pub struct EffectOptions {
     pub corner_radius: u32,
-    pub border_noise: u8,
 }
 
 impl EffectOptions {
     pub fn none() -> Self {
-        Self {
-            corner_radius: 0,
-            border_noise: 0,
-        }
+        Self { corner_radius: 0 }
     }
 
     pub fn active(&self) -> bool {
-        self.corner_radius > 0 || self.border_noise > 0
+        self.corner_radius > 0
     }
 }
 
@@ -70,42 +65,37 @@ fn bilinear(src: &RgbaImage, fx: f32, fy: f32) -> Rgba<u8> {
     }))
 }
 
-/// Apply rounded corners and/or border noise to `img`'s alpha channel in-place.
-///
-/// The two effects are combined multiplicatively so each is independent:
-/// when one is disabled (radius = 0 or noise = 0) it contributes 255 and has no effect.
-pub fn apply_alpha_mask(img: &mut RgbaImage, radius: u32, noise_amp: u8, rng: &mut impl Rng) {
+/// Apply a rounded-corner alpha mask to `img` in-place.
+/// Pixels outside the corner arc are set to fully transparent; the arc edge is
+/// anti-aliased over a 1-pixel band.
+pub fn apply_rounded_corners(img: &mut RgbaImage, radius: u32) {
+    if radius == 0 {
+        return;
+    }
     let (w, h) = img.dimensions();
     let radius = radius.min(w / 2).min(h / 2);
-    let noise_band = (noise_amp as u32).min(w / 2).min(h / 2);
 
     for py in 0..h {
         for px in 0..w {
-            let a_corner = corner_alpha(px, py, w, h, radius);
-            let a_noise = border_noise_alpha(px, py, w, h, noise_band, noise_amp, rng);
-            let combined = (a_corner as u16 * a_noise as u16 / 255) as u8;
-            img.get_pixel_mut(px, py)[3] = combined;
+            img.get_pixel_mut(px, py)[3] = corner_alpha(px, py, w, h, radius);
         }
     }
 }
 
-/// Alpha from rounded-corner mask: 0 outside arc, 255 inside, anti-aliased at edge.
+/// Alpha value for a pixel given rounded-corner geometry.
+/// Returns 0 outside the arc, 255 inside, and a linear blend in the 1-px edge band.
 fn corner_alpha(px: u32, py: u32, w: u32, h: u32, radius: u32) -> u8 {
-    if radius == 0 {
-        return 255;
-    }
     let r = radius as f32;
-    // Determine which corner quadrant this pixel belongs to, if any.
     let (in_corner, cx, cy) = if px < radius && py < radius {
-        (true, radius as f32, radius as f32)
+        (true, r, r)
     } else if px >= w - radius && py < radius {
-        (true, (w - radius) as f32, radius as f32)
+        (true, (w - radius) as f32, r)
     } else if px < radius && py >= h - radius {
-        (true, radius as f32, (h - radius) as f32)
+        (true, r, (h - radius) as f32)
     } else if px >= w - radius && py >= h - radius {
         (true, (w - radius) as f32, (h - radius) as f32)
     } else {
-        (false, 0.0, 0.0)
+        return 255;
     };
 
     if !in_corner {
@@ -120,36 +110,4 @@ fn corner_alpha(px: u32, py: u32, w: u32, h: u32, radius: u32) -> u8 {
     } else {
         255
     }
-}
-
-/// Alpha from border noise: full inside the image, rough/tapered near each edge.
-fn border_noise_alpha(
-    px: u32,
-    py: u32,
-    w: u32,
-    h: u32,
-    noise_band: u32,
-    noise_amp: u8,
-    rng: &mut impl Rng,
-) -> u8 {
-    if noise_amp == 0 || noise_band == 0 {
-        return 255;
-    }
-    let dist = edge_distance(px, py, w, h);
-    if dist >= noise_band {
-        return 255;
-    }
-    // Noise fades to zero as we approach the edge; inward it reaches full amplitude.
-    let t = dist as f32 / noise_band as f32; // 0.0 at edge → 1.0 at inner boundary
-    let noise: u8 = rng.random();
-    let reduction = ((1.0 - t) * noise as f32) as u8;
-    255 - reduction
-}
-
-fn edge_distance(px: u32, py: u32, w: u32, h: u32) -> u32 {
-    let left = px;
-    let right = w - 1 - px;
-    let top = py;
-    let bottom = h - 1 - py;
-    left.min(right).min(top).min(bottom)
 }

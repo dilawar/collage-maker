@@ -30,7 +30,6 @@ fn main() -> Result<()> {
 
     let opts = EffectOptions {
         corner_radius: args.corner_radius,
-        border_noise: args.border_noise,
     };
 
     let collage = render::draw(&placements, canvas_w, canvas_h, &opts)?;

@@ -3,8 +3,6 @@ use crate::layout::Placement;
 use anyhow::{Context, Result};
 use image::{ImageReader, Rgb, RgbImage, RgbaImage, imageops};
 use indicatif::{ProgressBar, ProgressStyle};
-use rand::SeedableRng;
-use rand::rngs::StdRng;
 use std::path::Path;
 
 /// Composite all placements onto a white canvas and return the result.
@@ -15,8 +13,6 @@ pub fn draw(
     opts: &EffectOptions,
 ) -> Result<RgbImage> {
     let mut canvas = white_canvas(canvas_w, canvas_h);
-    // Seeded RNG for border noise — same inputs always produce the same output.
-    let mut rng = StdRng::seed_from_u64(42);
     let pb = render_bar(placements.len());
     for p in placements {
         pb.set_message(
@@ -26,7 +22,7 @@ pub fn draw(
                 .to_string_lossy()
                 .into_owned(),
         );
-        paste(&mut canvas, p, opts, &mut rng)?;
+        paste(&mut canvas, p, opts)?;
         pb.inc(1);
     }
     pb.finish_and_clear();
@@ -37,12 +33,7 @@ fn white_canvas(w: u32, h: u32) -> RgbImage {
     RgbImage::from_pixel(w, h, Rgb([255, 255, 255]))
 }
 
-fn paste(
-    canvas: &mut RgbImage,
-    p: &Placement,
-    opts: &EffectOptions,
-    rng: &mut StdRng,
-) -> Result<()> {
+fn paste(canvas: &mut RgbImage, p: &Placement, opts: &EffectOptions) -> Result<()> {
     if p.w == 0 || p.h == 0 {
         return Ok(());
     }
@@ -67,8 +58,8 @@ fn paste(
     };
 
     let mut tile = rotated;
-    if opts.active() {
-        effects::apply_alpha_mask(&mut tile, opts.corner_radius, opts.border_noise, rng);
+    if opts.corner_radius > 0 {
+        effects::apply_rounded_corners(&mut tile, opts.corner_radius);
     }
 
     composite_over_white(canvas, &tile, p.x, p.y);

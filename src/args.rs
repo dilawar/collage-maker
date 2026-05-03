@@ -38,10 +38,6 @@ pub struct Args {
     #[arg(long, default_value_t = 0)]
     pub corner_radius: u32,
 
-    /// Border roughness 0–255: noisy alpha falloff at each image edge — 0 disables
-    #[arg(long, default_value_t = 0)]
-    pub border_noise: u8,
-
     /// Max random tilt per image in degrees, e.g. 3.0 for ±3° — 0 disables
     #[arg(long, default_value_t = 0.0)]
     pub max_rotation: f32,
