@@ -1,4 +1,5 @@
 use crate::collect::Meta;
+use indicatif::{ProgressBar, ProgressStyle};
 
 /// Pixel coordinates and size for one image on the canvas.
 pub struct Placement {
@@ -28,19 +29,38 @@ pub fn compute(metas: &[Meta], canvas_w: u32, canvas_h: u32, gap: u32) -> Vec<Pl
     place(metas, &best_rows, cw, ch, g)
 }
 
+fn layout_spinner(max_k: usize) -> ProgressBar {
+    let pb = ProgressBar::new(max_k as u64);
+    pb.set_style(
+        ProgressStyle::with_template(
+            "{spinner:.cyan} Computing layout [{bar:30.cyan/dim}] {pos}/{len} row configs",
+        )
+        .unwrap()
+        .progress_chars("=> "),
+    );
+    pb
+}
+
 // ── partition ────────────────────────────────────────────────────────────────
 
 /// Try every candidate row count and return the partition with the best score.
 fn best_partition(metas: &[Meta], cw: f64, ch: f64, g: f64) -> Vec<Vec<usize>> {
     let max_k = metas.len().min(20);
-    (1..=max_k)
-        .map(|k| optimal_partition(metas, k))
+    let pb = layout_spinner(max_k);
+    let result = (1..=max_k)
+        .map(|k| {
+            let rows = optimal_partition(metas, k);
+            pb.inc(1);
+            rows
+        })
         .min_by(|a, b| {
             let sa = score(a, metas, cw, ch, g);
             let sb = score(b, metas, cw, ch, g);
             sa.partial_cmp(&sb).unwrap()
         })
-        .unwrap_or_default()
+        .unwrap_or_default();
+    pb.finish_and_clear();
+    result
 }
 
 /// Lower is better. Overflow (total > canvas) is penalised 2×.

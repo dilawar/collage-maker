@@ -1,14 +1,19 @@
 use crate::layout::Placement;
 use anyhow::{Context, Result};
 use image::{ImageReader, Rgb, RgbImage, imageops};
+use indicatif::{ProgressBar, ProgressStyle};
 use std::path::Path;
 
 /// Composite all placements onto a white canvas and return the result.
 pub fn draw(placements: &[Placement], canvas_w: u32, canvas_h: u32) -> Result<RgbImage> {
     let mut canvas = white_canvas(canvas_w, canvas_h);
+    let pb = render_bar(placements.len());
     for p in placements {
+        pb.set_message(p.path.file_name().unwrap_or_default().to_string_lossy().into_owned());
         paste(&mut canvas, p)?;
+        pb.inc(1);
     }
+    pb.finish_and_clear();
     Ok(canvas)
 }
 
@@ -38,4 +43,16 @@ fn load_raw(path: &Path) -> Result<RgbImage> {
         .with_guessed_format()?
         .decode()?
         .into_rgb8())
+}
+
+fn render_bar(n: usize) -> ProgressBar {
+    let pb = ProgressBar::new(n as u64);
+    pb.set_style(
+        ProgressStyle::with_template(
+            "{spinner:.green} Rendering [{bar:30.green/dim}] {pos}/{len}  {msg}",
+        )
+        .unwrap()
+        .progress_chars("=> "),
+    );
+    pb
 }

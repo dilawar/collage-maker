@@ -16,7 +16,6 @@ fn main() -> Result<()> {
     eprintln!("Canvas: {}×{} px", canvas_w, canvas_h);
     let placements = layout::compute(&metas, canvas_w, canvas_h, args.gap);
 
-    eprintln!("Rendering…");
     let collage = render::draw(&placements, canvas_w, canvas_h)?;
 
     eprintln!("Saving {:?}…", args.output);
