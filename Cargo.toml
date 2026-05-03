@@ -40,6 +40,7 @@ clap      = { version = "4", features = ["derive"] }
 image     = { version = "0.25", features = ["jpeg", "png", "bmp", "gif", "tiff", "webp"] }
 indicatif = "0.18"
 printpdf  = { version = "0.7", features = ["embedded_images"] }
+rand = { version = "0.10.1", default-features = false, features = ["std", "std_rng"] }
 walkdir   = "2"
 
 [dev-dependencies]

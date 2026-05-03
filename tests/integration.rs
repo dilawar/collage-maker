@@ -228,14 +228,14 @@ mod layout_tests {
 
 mod render_tests {
     use super::*;
-    use collage_maker::{collect, layout, render};
+    use collage_maker::{collect, effects::EffectOptions, layout, render};
 
     #[test]
     fn render_correct_canvas_size() {
         let paths = image_paths(&["landscape_a.jpg", "portrait_a.jpg"]);
         let metas = collect::probe_all(&paths);
         let placements = layout::compute(&metas, 1240, 1754, 4);
-        let canvas = render::draw(&placements, 1240, 1754).unwrap();
+        let canvas = render::draw(&placements, 1240, 1754, &EffectOptions::none()).unwrap();
         assert_eq!(canvas.width(), 1240);
         assert_eq!(canvas.height(), 1754);
     }
@@ -245,7 +245,7 @@ mod render_tests {
         let paths = image_paths(&["square_a.jpg"]);
         let metas = collect::probe_all(&paths);
         let placements = layout::compute(&metas, 600, 600, 0);
-        let canvas = render::draw(&placements, 600, 600).unwrap();
+        let canvas = render::draw(&placements, 600, 600, &EffectOptions::none()).unwrap();
 
         let non_white = canvas
             .pixels()
@@ -262,7 +262,7 @@ mod render_tests {
         let paths = all_test_images();
         let metas = collect::probe_all(&paths);
         let placements = layout::compute(&metas, 1240, 1754, 4);
-        let canvas = render::draw(&placements, 1240, 1754).unwrap();
+        let canvas = render::draw(&placements, 1240, 1754, &EffectOptions::none()).unwrap();
         assert_eq!((canvas.width(), canvas.height()), (1240, 1754));
     }
 }
@@ -271,14 +271,14 @@ mod render_tests {
 
 mod output_tests {
     use super::*;
-    use collage_maker::{collect, layout, output, render};
+    use collage_maker::{collect, effects::EffectOptions, layout, output, render};
     use std::io::Read;
 
     fn make_collage(cw: u32, ch: u32) -> image::RgbImage {
         let paths = image_paths(&["landscape_a.jpg", "portrait_a.jpg", "square_a.jpg"]);
         let metas = collect::probe_all(&paths);
         let placements = layout::compute(&metas, cw, ch, 4);
-        render::draw(&placements, cw, ch).unwrap()
+        render::draw(&placements, cw, ch, &EffectOptions::none()).unwrap()
     }
 
     #[test]

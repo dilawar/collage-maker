@@ -1,13 +1,16 @@
 use crate::collect::Meta;
 use indicatif::{ProgressBar, ProgressStyle};
 
-/// Pixel coordinates and size for one image on the canvas.
+/// Pixel coordinates, size, and optional rotation for one image on the canvas.
 pub struct Placement {
     pub path: std::path::PathBuf,
     pub x: u32,
     pub y: u32,
     pub w: u32,
     pub h: u32,
+    /// Rotation angle in radians; `None` means no rotation.
+    /// Assigned by the caller after layout; the layout algorithm itself is rotation-agnostic.
+    pub rotation: Option<f32>,
 }
 
 /// Entry point: given image metadata and canvas dimensions, return placements.
@@ -211,6 +214,7 @@ fn place_row(row: &[usize], metas: &[Meta], row_h: f64, g: f64, y: f64, out: &mu
             y: y.round() as u32,
             w: iw.round() as u32,
             h: row_h.round() as u32,
+            rotation: None,
         });
         x += iw + g;
     }
